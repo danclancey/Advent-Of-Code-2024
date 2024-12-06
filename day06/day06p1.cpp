@@ -16,7 +16,16 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
 int simGuard(const std::vector<std::string>& map, int startRow, int startCol, int startDir);
 
 int main() {
+    // Parse input 
+    std::vector<std::string> map;
+    int startRow, startCol, startDir;
+    parseInput("input.txt", map, startRow, startCol, startDir);
 
+    // Sim guard movement 
+    int distinctPos = simGuard(map, startRow, startCol, startDir);
+
+    // Output result
+    std::cout << "Distinct Positions Visited: " << distinctPos << std::endl;
     return 0;
 }
 
@@ -45,7 +54,7 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
                 return;
             } else if ( c == '>') {
                 startRow = row;
-                startcol = col;
+                startCol = col;
                 startDir = 1;
                 return;
             } else if (c == 'v') {
@@ -57,7 +66,7 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
                 startRow = row;
                 startCol = col;
                 startDir = 3;
-                return 
+                return; 
             }
         }
     }
