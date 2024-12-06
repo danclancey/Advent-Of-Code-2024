@@ -22,13 +22,11 @@ struct PairHash {
     }
 };
 
-// For loop detection, we need a hash for a tuple<int,int,int>
 struct StateHash {
     std::size_t operator()(const std::tuple<int,int,int>& t) const {
         auto h1 = std::hash<int>{}(std::get<0>(t));
         auto h2 = std::hash<int>{}(std::get<1>(t));
         auto h3 = std::hash<int>{}(std::get<2>(t));
-        // Combine the three
         return h1 ^ (h2 << 1) ^ (h3 << 2);
     }
 };
@@ -38,17 +36,13 @@ bool simGuard(const std::vector<std::string>& map, int startRow, int startCol, i
 int countLoopObstructions(std::vector<std::string>& map, int startRow, int startCol, int startDir);
 
 int main() {
-    // Parse input
     std::vector<std::string> map;
     int startRow, startCol, startDir;
     parseInput("input.txt", map, startRow, startCol, startDir);
 
-    // Count how many positions can cause a loop if obstructed
     int loopPositions = countLoopObstructions(map, startRow, startCol, startDir);
 
-    // Output the result
     std::cout << "Number of positions causing a loop: " << loopPositions << std::endl;
-
     return 0;
 }
 
@@ -66,7 +60,6 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
 
     inputFile.close();
 
-    // Find start pos and dir
     bool found = false;
     for (size_t row = 0; row < map.size() && !found; row++) {
         for (size_t col = 0; col < map[row].size() && !found; col++) {
@@ -75,7 +68,7 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
                 startRow = (int)row;
                 startCol = (int)col;
                 startDir = 0;
-                map[row][col] = '.'; 
+                map[row][col] = '.';
                 found = true;
             } else if (c == '>') {
                 startRow = (int)row;
@@ -105,8 +98,6 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
     }
 }
 
-// Simulate the guard's movement.
-// Returns false if guard eventually leaves the map, true if guard loops indefinitely (loopDetected = true).
 bool simGuard(const std::vector<std::string>& map, int startRow, int startCol, int startDir, bool& loopDetected) {
     int rows = (int)map.size();
     int cols = (int)map[0].size();
@@ -114,21 +105,21 @@ bool simGuard(const std::vector<std::string>& map, int startRow, int startCol, i
     int col = startCol;
     int dir = startDir;
 
-    // Set to false initially
     loopDetected = false;
 
-    // Keep track of states visited: (row, col, dir)
     std::unordered_set<std::tuple<int,int,int>, StateHash> visitedStates;
-
     visitedStates.insert({row, col, dir});
 
+    int steps = 0;
+
     while (true) {
+        steps++;
         int nextRow = row + DIRECTIONS[dir].first;
         int nextCol = col + DIRECTIONS[dir].second;
 
         // Check if next step is outside the map -> guard leaves
         if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= cols) {
-            // Guard leaves the map
+            std::cout << "[simGuard] Guard left the map after " << steps << " steps.\n";
             return false; // no loop
         }
 
@@ -140,31 +131,43 @@ bool simGuard(const std::vector<std::string>& map, int startRow, int startCol, i
             // Move forward
             row = nextRow;
             col = nextCol;
-            // Check if this state was seen before
             auto state = std::make_tuple(row, col, dir);
             if (visitedStates.find(state) != visitedStates.end()) {
                 // Loop detected
                 loopDetected = true;
+                // logging:
+                std::cout << "[simGuard] Loop detected after " << steps << " steps at (" << row << "," << col << ") facing dir " << dir << ".\n";
                 return true;
             }
             visitedStates.insert(state);
         }
+
+        // Logging
+        if (steps > 10000000) {
+            std::cerr << "Warning: simGuard running unusually long.\n";
+            return false;
+        }
     }
 }
 
-// Count how many positions we can place an obstruction and cause a loop
 int countLoopObstructions(std::vector<std::string>& map, int startRow, int startCol, int startDir) {
     int rows = (int)map.size();
     int cols = (int)map[0].size();
     int count = 0;
 
-    // The guard starts at (startRow, startCol). We can't place an obstacle there.
-    // We'll try placing '#' in every '.' cell except the start one and check if it causes a loop.
+    int testCount = 0; // to track how many cells tested
 
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
             if ((r == startRow && c == startCol) || map[r][c] != '.') {
                 continue; // skip starting pos & non-empty cells
+            }
+
+            testCount++;
+            // Log progress every 1000 attempts:
+            if (testCount % 1000 == 0) {
+                std::cout << "[countLoopObstructions] Tested " << testCount 
+                          << " cells so far..." << std::endl;
             }
 
             // Temporarily place obstruction
@@ -181,6 +184,7 @@ int countLoopObstructions(std::vector<std::string>& map, int startRow, int start
         }
     }
 
+    std::cout << "[countLoopObstructions] Finished testing " << testCount << " cells." << std::endl;
     return count;
 }
 
