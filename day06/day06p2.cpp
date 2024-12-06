@@ -106,45 +106,52 @@ bool simGuard(const std::vector<std::string>& map, int startRow, int startCol, i
     int dir = startDir;
 
     loopDetected = false;
-
     std::unordered_set<std::tuple<int,int,int>, StateHash> visitedStates;
+
+    // Always check the initial state
     visitedStates.insert({row, col, dir});
 
     int steps = 0;
-
     while (true) {
         steps++;
         int nextRow = row + DIRECTIONS[dir].first;
         int nextCol = col + DIRECTIONS[dir].second;
 
-        // Check if next step is outside the map -> guard leaves
+        // If leaving the map, no loop
         if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= cols) {
-            std::cout << "[simGuard] Guard left the map after " << steps << " steps.\n";
-            return false; // no loop
+            // Guard leaves map
+            return false;
         }
 
-        // Check for obstacle
         if (map[nextRow][nextCol] == '#') {
-            // Turn right
+            // Obstacle ahead -> turn right, no movement
             dir = (dir + 1) % 4;
+
+            // After changing direction, we have a new state (row,col,dir)
+            // Check if we've seen this state before
+            auto state = std::make_tuple(row, col, dir);
+            if (visitedStates.find(state) != visitedStates.end()) {
+                loopDetected = true;
+                return true;
+            }
+            visitedStates.insert(state);
+
         } else {
             // Move forward
             row = nextRow;
             col = nextCol;
+
+            // After moving forward, check again if we have a loop
             auto state = std::make_tuple(row, col, dir);
             if (visitedStates.find(state) != visitedStates.end()) {
-                // Loop detected
                 loopDetected = true;
-                // logging:
-                std::cout << "[simGuard] Loop detected after " << steps << " steps at (" << row << "," << col << ") facing dir " << dir << ".\n";
                 return true;
             }
             visitedStates.insert(state);
         }
 
-        // Logging
         if (steps > 10000000) {
-            std::cerr << "Warning: simGuard running unusually long.\n";
+            // Safety net if something goes wrong
             return false;
         }
     }
