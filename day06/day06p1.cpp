@@ -72,7 +72,7 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
     }
 
     std::cerr << "Error: No starting position found!\n";
-    eixt(1);
+    exit(1);
 }
 
 int simGuard(const std::vector<std::string& map, int startRow, int startCol, int startDir) {
