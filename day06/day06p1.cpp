@@ -56,7 +56,7 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
     for (size_t row = 0; row < map.size(); row++) {
         for (size_t col = 0; col < map[row].size(); col++) {
             char c = map[row][col];
-            if (c = '^') {
+            if (c == '^') {
                 startRow = row;
                 startCol = col;
                 startDir = 0;
