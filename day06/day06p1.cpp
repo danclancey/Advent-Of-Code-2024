@@ -86,39 +86,31 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
 
 int simGuard(const std::vector<std::string>& map, int startRow, int startCol, int startDir) {
     std::unordered_set<std::pair<int, int>, PairHash> visited;
-    int rows = map.size();
-    int cols = map[0].size();
-    int row = startRow, 
-        col = startCol, 
+    int rows = (int)map.size();
+    int cols = (int)map[0].size();
+    int row = startRow,
+        col = startCol,
         dir = startDir;
-
-    auto isValid = [&](int r, int c) {
-        return r >= 0 && r < rows && c >= 0 && c < cols && map[r][c] != '#';
-    };
 
     visited.insert({row, col});
 
-    while(true) {
-        // Calc next pos 
+    while (true) {
         int nextRow = row + DIRECTIONS[dir].first;
         int nextCol = col + DIRECTIONS[dir].second;
 
-        if (isValid(nextRow, nextCol)) {
-            // Move foward
+        if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= cols) {
+            break;
+        }
+
+        if (map[nextRow][nextCol] == '#') {
+            dir = (dir + 1) % 4;
+        } else {
             row = nextRow;
             col = nextCol;
             visited.insert({row, col});
-        } else {
-            // Turn right 
-            dir = (dir + 1) % 4;
-        }
-
-        // Check if map exited 
-        if (row < 0 || row >= rows || col < 0 || col >= cols) {
-            break;
         }
     }
 
-    return visited.size();
+    return (int)visited.size();
 }
 
