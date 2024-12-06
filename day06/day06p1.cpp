@@ -12,6 +12,15 @@ const std::vector<std::pair<int, int>> DIRECTIONS = {
     {0, -1}   // Left
 };
 
+struct PairHash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+        return h1 ^ (h2 << 1);  // Combine hashes 
+    }
+};
+
 void parseInput(const std::string& filename, std::vector<std::string>& map, int& startRow, int& startCol, int& startDir);
 int simGuard(const std::vector<std::string>& map, int startRow, int startCol, int startDir);
 
@@ -75,8 +84,8 @@ void parseInput(const std::string& filename, std::vector<std::string>& map, int&
     exit(1);
 }
 
-int simGuard(const std::vector<std::string& map, int startRow, int startCol, int startDir) {
-    std::unordered_set<std::pair<int, int> std::hash<std::pair<int, int>>> visted;
+int simGuard(const std::vector<std::string>& map, int startRow, int startCol, int startDir) {
+    std::unordered_set<std::pair<int, int>, PairHash> visited;
     int rows = map.size();
     int cols = map[0].size();
     int row = startRow, 
@@ -87,7 +96,7 @@ int simGuard(const std::vector<std::string& map, int startRow, int startCol, int
         return r >= 0 && r < rows && c >= 0 && c < cols && map[r][c] != '#';
     };
 
-    visted.insert({row, col});
+    visited.insert({row, col});
 
     while(true) {
         // Calc next pos 
@@ -98,7 +107,7 @@ int simGuard(const std::vector<std::string& map, int startRow, int startCol, int
             // Move foward
             row = nextRow;
             col = nextCol;
-            visted.insert({row, col});
+            visited.insert({row, col});
         } else {
             // Turn right 
             dir = (dir + 1) % 4;
@@ -110,6 +119,6 @@ int simGuard(const std::vector<std::string& map, int startRow, int startCol, int
         }
     }
 
-    return visted.size();
+    return visited.size();
 }
 
